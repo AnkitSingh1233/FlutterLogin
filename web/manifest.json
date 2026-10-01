@@ -1,0 +1,11 @@
+{
+  "name": "Nexus Auth",
+  "short_name": "Nexus",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#090D16",
+  "theme_color": "#6366F1",
+  "description": "Flutter Authentication and Login Screen",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

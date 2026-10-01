@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flutter Login - Nexus Auth Preview</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --secondary: #8b5cf6;
+      --accent: #ec4899;
+      --cyan: #06b6d4;
+      --success: #10b981;
+      --error: #ef4444;
+
+      /* Dark Theme (Default) */
+      --bg-color: #090d16;
+      --surface-color: rgba(19, 28, 49, 0.85);
+      --card-color: #1e293b;
+      --input-bg: #0f172a;
+      --border-color: #334155;
+      --border-focus: #6366f1;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --badge-bg: rgba(99, 102, 241, 0.12);
+    }
+
+    [data-theme="light"] {
+      --bg-color: #f1f5f9;
+      --surface-color: rgba(255, 255, 255, 0.95);
+      --card-color: #ffffff;
+      --input-bg: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-focus: #6366f1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --badge-bg: rgba(99, 102, 241, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    /* Ambient Glowing Orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(100px);
+      z-index: 0;
+      opacity: 0.45;
+    }
+    .orb-1 {
+      top: -120px;
+      left: -100px;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, #6366f1, transparent 70%);
+    }
+    .orb-2 {
+      bottom: -100px;
+      right: -100px;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, #8b5cf6, transparent 70%);
+    }
+
+    /* Top Controls Bar */
+    .top-bar {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 20;
+    }
+    .tag-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-light);
+      backdrop-filter: blur(10px);
+    }
+    .theme-toggle-btn {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--primary);
+    }
+
+    /* Auth Card Container */
+    .auth-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 34px 30px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(24px);
+    }
+
+    /* Brand Header */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+    .brand-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px auto;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+      color: white;
+    }
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Tab Switcher */
+    .tab-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 9px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: var(--card-color);
+      color: var(--text-primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Auto-fill demo credentials chip */
+    .demo-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 0 auto 20px auto;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--badge-bg);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--primary-light);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      width: fit-content;
+      transition: all 0.2s;
+    }
+    .demo-chip:hover {
+      background: rgba(99, 102, 241, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1.2px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 14.5px;
+      padding: 13px 44px 13px 44px;
+      border-radius: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .toggle-password-btn {
+      position: absolute;
+      right: 14px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+    }
+    .toggle-password-btn:hover {
+      color: var(--text-primary);
+    }
+    .error-msg {
+      font-size: 12px;
+      color: var(--error);
+      margin-top: 5px;
+      display: none;
+    }
+
+    /* Checkbox & Forgot Password */
+    .auth-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 0 22px 0;
+      font-size: 13px;
+    }
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+    .remember-me input {
+      accent-color: var(--primary);
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .forgot-link {
+      color: var(--primary-light);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+      color: white;
+      font-size: 15.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+      transition: all 0.2s ease;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(99, 102, 241, 0.45);
+    }
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+    .submit-btn:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Divider */
+    .divider-row {
+      display: flex;
+      align-items: center;
+      margin: 22px 0 18px 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+    .divider-text {
+      padding: 0 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: lowercase;
+    }
+
+    /* Social Logins */
+    .social-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .social-btn {
+      width: 66px;
+      height: 52px;
+      background: var(--input-bg);
+      border: 1.2px solid var(--border-color);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-primary);
+    }
+    .social-btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Footer Switcher */
+    .footer-text {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .footer-link {
+      color: var(--primary-light);
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      border: 1px solid #334155;
+      font-size: 13.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal / Bottom Sheet for Forgot Password */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface-color);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      border: 1px solid var(--border-color);
+      padding: 28px;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+      animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* Dashboard view after login */
+    .dashboard-view {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Ambient Light Orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- Top Bar -->
+  <!-- Top Navigation & View Switcher Bar -->
+  <div class="top-bar" style="position: relative; top: auto; display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 480px; margin-bottom: 18px; z-index: 20;">
+    <!-- Segmented Tab: Login View vs Dashboard (Logout) View -->
+    <div style="display: inline-flex; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 4px; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      <button id="viewLoginBtn" onclick="switchToLoginView()" style="padding: 7px 14px; border-radius: 9px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--primary); color: white; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+        <i data-lucide="log-in" style="width: 14px; height: 14px;"></i> Login View
+      </button>
+      <button id="viewDashboardBtn" onclick="switchToDashboardView()" style="padding: 7px 14px; border-radius: 9px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+        <i data-lucide="layout-dashboard" style="width: 14px; height: 14px;"></i> Dashboard (Logout)
+      </button>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+      <i data-lucide="sun" id="themeIcon" style="width: 18px; height: 18px;"></i>
+    </button>
+  </div>
+
+  <!-- Main Login Card -->
+  <div class="auth-card" id="authCard">
+    <div class="brand-header">
+      <div class="brand-icon">
+        <i data-lucide="fingerprint" style="width: 30px; height: 30px;"></i>
+      </div>
+      <h1 class="brand-title" id="authTitle">Welcome back</h1>
+      <p class="brand-subtitle" id="authSubtitle">Please enter your credentials to access your account.</p>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="tab-container">
+      <button class="tab-btn active" id="tabSignIn">Sign In</button>
+      <button class="tab-btn" id="tabSignUp">Sign Up</button>
+    </div>
+
+    <!-- Quick Demo Auto-fill & Active Session Banner with Logout Button -->
+    <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 12px 14px; margin: 16px 0 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+        <div style="position: relative; flex-shrink: 0;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(99, 102, 241, 0.25); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; color: var(--primary-light);">A</div>
+          <span style="position: absolute; bottom: -1px; right: -1px; width: 9px; height: 9px; border-radius: 50%; background: #10b981; border: 1.5px solid var(--card-color);"></span>
+        </div>
+        <div style="min-width: 0;">
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ankit Singh</div>
+          <div style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ankit@gmail.com</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px; flex-shrink: 0;">
+        <button type="button" onclick="switchToDashboardView()" style="background: var(--primary); color: white; border: none; padding: 6px 11px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Open Dashboard">
+          <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> View
+        </button>
+        <button type="button" onclick="openLogoutModal()" style="background: rgba(239, 68, 68, 0.14); color: var(--error); border: 1.2px solid rgba(239, 68, 68, 0.35); padding: 6px 11px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Log Out of this session">
+          <i data-lucide="log-out" style="width: 13px; height: 13px;"></i> Log Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Demo Auto-fill -->
+    <div style="text-align: center; margin-bottom: 16px;">
+      <div class="demo-chip" id="demoChipBtn">
+        <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+        Auto-Fill Demo Credentials
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form id="authForm" onsubmit="event.preventDefault(); handleAuthSubmit();">
+      <!-- Full Name (Sign Up only) -->
+      <div class="form-group" id="nameGroup" style="display: none;">
+        <label class="form-label">Full Name</label>
+        <div class="input-wrapper">
+          <div class="input-icon"><i data-lucide="user" style="width: 18px; height: 18px;"></i></div>
+          <input type="text" class="form-input" id="nameInput" placeholder="Alex Morgan">
+        </div>
+        <div class="error-msg" id="nameError">Please enter your full name</div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrapper">
+          <div class="input-icon"><i data-lucide="mail" style="width: 18px; height: 18px;"></i></div>
+          <input type="email" class="form-input" id="emailInput" placeholder="ankit@gmail.com" required>
+        </div>
+        <div class="error-msg" id="emailError">Please enter a valid email address</div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrapper">
+          <div class="input-icon"><i data-lucide="lock" style="width: 18px; height: 18px;"></i></div>
+          <input type="password" class="form-input" id="passwordInput" placeholder="••••••••••••" required>
+          <button type="button" class="toggle-password-btn" id="togglePasswordBtn">
+            <i data-lucide="eye" id="passwordEyeIcon" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
+        <div class="error-msg" id="passwordError">Password must be at least 6 characters</div>
+      </div>
+
+      <!-- Confirm Password (Sign Up only) -->
+      <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+        <label class="form-label">Confirm Password</label>
+        <div class="input-wrapper">
+          <div class="input-icon"><i data-lucide="shield-check" style="width: 18px; height: 18px;"></i></div>
+          <input type="password" class="form-input" id="confirmPasswordInput" placeholder="••••••••••••">
+        </div>
+        <div class="error-msg" id="confirmPasswordError">Passwords do not match</div>
+      </div>
+
+      <!-- Remember Me & Forgot Password -->
+      <div class="auth-options" id="authOptions">
+        <label class="remember-me">
+          <input type="checkbox" id="rememberMeCheckbox" checked>
+          <span>Remember me</span>
+        </label>
+        <a class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
+      </div>
+
+      <!-- Submit CTA Button -->
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span class="spinner" id="btnSpinner"></span>
+        <span id="btnText">Sign In</span>
+        <i data-lucide="arrow-right" id="btnArrow" style="width: 18px; height: 18px;"></i>
+      </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="divider-row">
+      <div class="divider-line"></div>
+      <div class="divider-text">or continue with</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Social Buttons -->
+    <div class="social-row">
+      <!-- Google -->
+      <button class="social-btn" onclick="simulateSocial('Google')">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+      </button>
+
+      <!-- Apple -->
+      <button class="social-btn" onclick="simulateSocial('Apple')">
+        <i data-lucide="apple" style="width: 22px; height: 22px;"></i>
+      </button>
+
+      <!-- GitHub -->
+      <button class="social-btn" onclick="simulateSocial('GitHub')">
+        <i data-lucide="github" style="width: 20px; height: 20px;"></i>
+      </button>
+    </div>
+
+    <!-- Footer Switcher -->
+    <div class="footer-text">
+      <span id="footerPrompt">Don't have an account?</span>
+      <span class="footer-link" id="footerAction">Sign Up</span>
+    </div>
+  </div>
+
+  <!-- Post-Login Dashboard Simulation -->
+  <div class="dashboard-view" id="dashboardView">
+    <!-- Top Header Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899); display: flex; align-items: center; justify-content: center; color: white;">
+          <i data-lucide="zap" style="width: 19px; height: 19px;"></i>
+        </div>
+        <span style="font-weight: 700; font-size: 16px; color: var(--text-primary);">Dashboard</span>
+      </div>
+      <button onclick="openLogoutModal()" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--error); border-radius: 10px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;" title="Sign Out">
+        <i data-lucide="log-out" style="width: 17px; height: 17px;"></i>
+      </button>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899); border-radius: 20px; padding: 24px; color: white; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;" id="userAvatar">A</div>
+        <div>
+          <div style="font-size: 13px; opacity: 0.85;">Welcome back,</div>
+          <div style="font-size: 20px; font-weight: bold;" id="displayUserName">Alex Morgan</div>
+        </div>
+      </div>
+      <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.25); padding: 6px 12px; border-radius: 16px; font-size: 13px;">
+        <i data-lucide="check-circle" style="width: 14px; height: 14px; color: #4ade80;"></i>
+        <span id="displayUserEmail">Ankit@gmail.com</span>
+      </div>
+    </div>
+
+    <h3 style="font-size: 17px; margin-bottom: 14px; color: var(--text-primary);">Account Status</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+      <div style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Status</div>
+        <div style="font-weight: 700; color: #10b981;">Active</div>
+      </div>
+      <div style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Security</div>
+        <div style="font-weight: 700; color: var(--primary-light);">Protected (2FA)</div>
+      </div>
+    </div>
+
+    <button onclick="openLogoutModal()" class="submit-btn" style="background: transparent; border: 1.5px solid var(--error); color: var(--error); box-shadow: none;">
+      <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+      Log Out of Account
+    </button>
+  </div>
+
+  <!-- Logout Confirmation Bottom Sheet / Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal-sheet">
+      <div style="width: 40px; height: 4px; background: var(--border-color); border-radius: 2px; margin: 0 auto 20px auto;"></div>
+
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(239, 68, 68, 0.14); display: flex; align-items: center; justify-content: center; color: var(--error); margin: 0 auto 16px auto;">
+        <i data-lucide="log-out" style="width: 26px; height: 26px;"></i>
+      </div>
+
+      <h2 style="font-size: 20px; font-weight: 700; text-align: center; color: var(--text-primary); margin-bottom: 6px;">Log Out of Nexus</h2>
+      <p style="font-size: 13.5px; text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Are you sure you want to end your current session?</p>
+
+      <!-- User Info Card -->
+      <div style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px; color: var(--primary-light);" id="logoutAvatar">A</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);" id="logoutName">Alex Morgan</div>
+          <div style="font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="logoutEmail">Ankit@gmail.com</div>
+        </div>
+        <span style="background: rgba(16, 185, 129, 0.12); color: #10b981; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px;">Active</span>
+      </div>
+
+      <!-- Clear saved email checkbox -->
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 22px; font-size: 13px; color: var(--text-secondary); user-select: none;">
+        <input type="checkbox" id="clearEmailCheckbox" style="accent-color: var(--error); width: 16px; height: 16px; cursor: pointer;">
+        <span>Clear saved email on this device</span>
+      </label>
+
+      <div style="display: flex; gap: 12px;">
+        <button type="button" class="submit-btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); box-shadow: none;" onclick="closeLogoutModal()">Cancel</button>
+        <button type="button" class="submit-btn" id="confirmLogoutBtn" style="background: var(--error); color: white; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);" onclick="confirmLogout()">
+          <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forgot Password Bottom Sheet / Modal -->
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal-sheet">
+      <div style="width: 40px; height: 4px; background: var(--border-color); border-radius: 2px; margin: 0 auto 20px auto;"></div>
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 18px;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+          <i data-lucide="key-round" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div>
+          <h2 style="font-size: 19px; font-weight: 700; color: var(--text-primary);">Reset Password</h2>
+          <p style="font-size: 13px; color: var(--text-secondary);">Enter your email to receive recovery instructions</p>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label">Your Email</label>
+        <div class="input-wrapper">
+          <div class="input-icon"><i data-lucide="mail" style="width: 18px; height: 18px;"></i></div>
+          <input type="email" class="form-input" id="resetEmailInput" placeholder="alex.doe@example.com">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button type="button" class="submit-btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); box-shadow: none;" onclick="closeForgotModal()">Cancel</button>
+        <button type="button" class="submit-btn" id="sendResetBtn" onclick="handleSendReset()">Send Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast">
+    <i data-lucide="info" id="toastIcon" style="width: 18px; height: 18px; color: var(--primary-light);"></i>
+    <span id="toastMsg">Notification message</span>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // State
+    let isSignUp = false;
+    let isDarkMode = true;
+
+    // Elements
+    const body = document.body;
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const tabSignIn = document.getElementById('tabSignIn');
+    const tabSignUp = document.getElementById('tabSignUp');
+    const authTitle = document.getElementById('authTitle');
+    const authSubtitle = document.getElementById('authSubtitle');
+    const nameGroup = document.getElementById('nameGroup');
+    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+    const authOptions = document.getElementById('authOptions');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnArrow = document.getElementById('btnArrow');
+    const footerPrompt = document.getElementById('footerPrompt');
+    const footerAction = document.getElementById('footerAction');
+    const demoChipBtn = document.getElementById('demoChipBtn');
+
+    // Inputs
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const passwordEyeIcon = document.getElementById('passwordEyeIcon');
+
+    // Modals & Dashboard
+    const authCard = document.getElementById('authCard');
+    const dashboardView = document.getElementById('dashboardView');
+    const forgotModal = document.getElementById('forgotModal');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+
+    // Theme toggle
+    themeToggleBtn.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+      themeIcon.setAttribute('data-lucide', isDarkMode ? 'sun' : 'moon');
+      lucide.createIcons();
+    });
+
+    // Password visibility toggle
+    let passwordVisible = false;
+    togglePasswordBtn.addEventListener('click', () => {
+      passwordVisible = !passwordVisible;
+      passwordInput.type = passwordVisible ? 'text' : 'password';
+      passwordEyeIcon.setAttribute('data-lucide', passwordVisible ? 'eye-off' : 'eye');
+      lucide.createIcons();
+    });
+
+    // Tabs
+    tabSignIn.addEventListener('click', () => setMode(false));
+    tabSignUp.addEventListener('click', () => setMode(true));
+    footerAction.addEventListener('click', () => setMode(!isSignUp));
+
+    function setMode(signUpMode) {
+      isSignUp = signUpMode;
+      if (isSignUp) {
+        tabSignUp.classList.add('active');
+        tabSignIn.classList.remove('active');
+        authTitle.innerText = 'Join Nexus';
+        authSubtitle.innerText = 'Create your free account to get started.';
+        nameGroup.style.display = 'block';
+        confirmPasswordGroup.style.display = 'block';
+        authOptions.style.display = 'none';
+        btnText.innerText = 'Create Account';
+        footerPrompt.innerText = 'Already have an account?';
+        footerAction.innerText = 'Sign In';
+      } else {
+        tabSignIn.classList.add('active');
+        tabSignUp.classList.remove('active');
+        authTitle.innerText = 'Welcome back';
+        authSubtitle.innerText = 'Please enter your credentials to access your account.';
+        nameGroup.style.display = 'none';
+        confirmPasswordGroup.style.display = 'none';
+        authOptions.style.display = 'flex';
+        btnText.innerText = 'Sign In';
+        footerPrompt.innerText = "Don't have an account?";
+        footerAction.innerText = 'Sign Up';
+      }
+    }
+
+    // Demo Fill
+    demoChipBtn.addEventListener('click', () => {
+      emailInput.value = 'Ankit@gmail.com';
+      passwordInput.value = 'Password@2026';
+      if (isSignUp) {
+        nameInput.value = 'Alex Morgan';
+        confirmPasswordInput.value = 'Password@2026';
+      }
+      showToast('Demo credentials applied!', 'zap');
+    });
+
+    // Forgot Password Modal
+    forgotPasswordLink.addEventListener('click', () => {
+      document.getElementById('resetEmailInput').value = emailInput.value || '';
+      forgotModal.classList.add('open');
+    });
+
+    function closeForgotModal() {
+      forgotModal.classList.remove('open');
+    }
+
+    function handleSendReset() {
+      const email = document.getElementById('resetEmailInput').value.trim();
+      if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email address', 'alert-circle');
+        return;
+      }
+      const resetBtn = document.getElementById('sendResetBtn');
+      resetBtn.innerText = 'Sending...';
+      resetBtn.disabled = true;
+
+      setTimeout(() => {
+        resetBtn.innerText = 'Send Link';
+        resetBtn.disabled = false;
+        closeForgotModal();
+        showToast(`Reset instructions sent to ${email}`, 'check-circle');
+      }, 1200);
+    }
+
+    // Auth Submission
+    function handleAuthSubmit() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email address', 'alert-circle');
+        return;
+      }
+      if (password.length < 6) {
+        showToast('Password must be at least 6 characters', 'alert-circle');
+        return;
+      }
+      if (isSignUp) {
+        const name = nameInput.value.trim();
+        const confirmPw = confirmPasswordInput.value;
+        if (!name) {
+          showToast('Please enter your full name', 'alert-circle');
+          return;
+        }
+        if (password !== confirmPw) {
+          showToast('Passwords do not match', 'alert-circle');
+          return;
+        }
+      }
+
+      // Simulate loading state
+      submitBtn.disabled = true;
+      btnSpinner.style.display = 'block';
+      btnArrow.style.display = 'none';
+      btnText.innerText = isSignUp ? 'Creating account...' : 'Authenticating...';
+
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        btnSpinner.style.display = 'none';
+        btnArrow.style.display = 'block';
+        btnText.innerText = isSignUp ? 'Create Account' : 'Sign In';
+
+        const finalName = isSignUp ? nameInput.value.trim() : (email.split('@')[0] || 'User');
+        document.getElementById('displayUserName').innerText = finalName;
+        document.getElementById('userAvatar').innerText = finalName.charAt(0).toUpperCase();
+        document.getElementById('displayUserEmail').innerText = email;
+
+      switchToDashboardView();
+      showToast(`Signed in successfully as ${finalName}!`, 'check-circle');
+    }, 1300);
+  }
+
+  // View Switchers
+  function switchToLoginView() {
+    authCard.style.display = 'block';
+    dashboardView.style.display = 'none';
+    const loginBtn = document.getElementById('viewLoginBtn');
+    const dashBtn = document.getElementById('viewDashboardBtn');
+    if (loginBtn && dashBtn) {
+      loginBtn.style.background = 'var(--primary)';
+      loginBtn.style.color = 'white';
+      dashBtn.style.background = 'transparent';
+      dashBtn.style.color = 'var(--text-secondary)';
+    }
+  }
+
+  function switchToDashboardView() {
+    const email = emailInput.value.trim() || 'Ankit@gmail.com';
+    const name = isSignUp && nameInput.value.trim() ? nameInput.value.trim() : (email.split('@')[0] || 'Alex Morgan');
+    document.getElementById('displayUserName').innerText = name;
+    document.getElementById('userAvatar').innerText = name.charAt(0).toUpperCase();
+    document.getElementById('displayUserEmail').innerText = email;
+
+    authCard.style.display = 'none';
+    dashboardView.style.display = 'block';
+
+    const loginBtn = document.getElementById('viewLoginBtn');
+    const dashBtn = document.getElementById('viewDashboardBtn');
+    if (loginBtn && dashBtn) {
+      dashBtn.style.background = 'var(--primary)';
+      dashBtn.style.color = 'white';
+      loginBtn.style.background = 'transparent';
+      loginBtn.style.color = 'var(--text-secondary)';
+    }
+    lucide.createIcons();
+  }
+
+  // Logout Modal Flow
+  const logoutModal = document.getElementById('logoutModal');
+
+  function openLogoutModal() {
+    const email = emailInput.value.trim() || 'Ankit@gmail.com';
+    const name = isSignUp && nameInput.value.trim() ? nameInput.value.trim() : (email.split('@')[0] || 'Alex Morgan');
+    document.getElementById('logoutAvatar').innerText = name.charAt(0).toUpperCase();
+    document.getElementById('logoutName').innerText = name;
+    document.getElementById('logoutEmail').innerText = email;
+    logoutModal.classList.add('open');
+    lucide.createIcons();
+  }
+
+  function closeLogoutModal() {
+    logoutModal.classList.remove('open');
+  }
+
+  function confirmLogout() {
+    const confirmBtn = document.getElementById('confirmLogoutBtn');
+    const originalHtml = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<span class="spinner" style="display:inline-block; border-color: rgba(255,255,255,0.3); border-left-color: white; margin-right: 8px;"></span> Logging out...';
+    confirmBtn.disabled = true;
+
+    setTimeout(() => {
+      confirmBtn.innerHTML = originalHtml;
+      confirmBtn.disabled = false;
+      closeLogoutModal();
+
+      // Security: clear password fields
+      passwordInput.value = '';
+      if (confirmPasswordInput) confirmPasswordInput.value = '';
+
+      // If user requested to clear saved email
+      const clearEmail = document.getElementById('clearEmailCheckbox');
+      if (clearEmail && clearEmail.checked) {
+        emailInput.value = '';
+        clearEmail.checked = false;
+      }
+
+      switchToLoginView();
+      showToast('You have been logged out successfully', 'check-circle');
+    }, 450);
+  }
+
+  function logout() {
+    openLogoutModal();
+  }
+
+    function simulateSocial(provider) {
+      showToast(`Connecting to ${provider}...`, 'loader');
+    }
+
+    function showToast(msg, iconName = 'info') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.innerText = msg;
+      toastIcon.setAttribute('data-lucide', iconName);
+      lucide.createIcons();
+
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2800);
+    }
+  </script>
+</body>
+</html>
